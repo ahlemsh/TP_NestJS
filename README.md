@@ -1,10 +1,10 @@
-# 🛒 Shop API — TP NestJS
+# Shop API — TP NestJS
 
 API REST d'une boutique en ligne, construite avec **NestJS**, **TypeORM** et **MySQL**, entièrement conteneurisée avec **Docker**.
 
 ---
 
-## ✨ Fonctionnalités
+## Fonctionnalités
 
 - CRUD complet sur **4 ressources** : Catégories, Produits, Clients, Commandes
 - Calcul automatique du **total** d'une commande à la création
@@ -15,7 +15,7 @@ API REST d'une boutique en ligne, construite avec **NestJS**, **TypeORM** et **M
 
 ---
 
-## 🗂️ Structure du projet
+## Structure du projet
 
 ```
 src/
@@ -31,21 +31,21 @@ src/
 Category ──< Product ──< OrderItem >── CustomerOrder >── Client
 ```
 
-| Entité          | Table              | Relations                              |
-|-----------------|--------------------|----------------------------------------|
-| `Category`      | `categories`       | 1 → N `Product`                        |
-| `Product`       | `products`         | N → 1 `Category`, 1 → N `OrderItem`   |
-| `Client`        | `clients`          | 1 → N `CustomerOrder`                  |
-| `CustomerOrder` | `customer_orders`  | N → 1 `Client`, 1 → N `OrderItem`     |
-| `OrderItem`     | `order_items`      | N → 1 `CustomerOrder`, N → 1 `Product`|
+| Entité          | Table              | Relations                               |
+|-----------------|--------------------|-----------------------------------------|
+| `Category`      | `categories`       | 1 → N `Product`                         |
+| `Product`       | `products`         | N → 1 `Category`, 1 → N `OrderItem`    |
+| `Client`        | `clients`          | 1 → N `CustomerOrder`                   |
+| `CustomerOrder` | `customer_orders`  | N → 1 `Client`, 1 → N `OrderItem`      |
+| `OrderItem`     | `order_items`      | N → 1 `CustomerOrder`, N → 1 `Product` |
 
 ---
 
-## 🚀 Démarrage rapide avec Docker
+## Démarrage rapide avec Docker
 
 ### Pré-requis
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop) ≥ 24
+- [Docker Desktop](https://www.docker.com/products/docker-desktop) >= 24
 
 ### Lancer la stack complète
 
@@ -55,10 +55,10 @@ docker compose up --build
 
 Compose démarre deux services :
 
-| Service | Image            | Port exposé  | Rôle                  |
-|---------|------------------|--------------|-----------------------|
-| `db`    | `mysql:8.4`      | `3307 → 3306`| Base de données MySQL |
-| `api`   | build local      | `3000 → 3000`| API NestJS            |
+| Service | Image        | Port exposé   | Rôle                  |
+|---------|--------------|---------------|-----------------------|
+| `db`    | `mysql:8.4`  | `3307 → 3306` | Base de données MySQL |
+| `api`   | build local  | `3000 → 3000` | API NestJS            |
 
 > L'API attend que MySQL soit **healthy** avant de démarrer (healthcheck toutes les 10 s, 10 tentatives max).
 
@@ -74,7 +74,7 @@ docker compose down -v
 
 ---
 
-## 🐳 Détails Docker
+## Détails Docker
 
 ### Dockerfile — multi-stage build
 
@@ -100,24 +100,26 @@ volumes:
 
 Les données MySQL survivent aux redémarrages et aux `docker compose down`. Seul `docker compose down -v` les supprime.
 
-### Variables d'environnement injectées par Compose
+### Variables d'environnement
 
-| Variable      | Valeur (compose)  | Description              |
-|---------------|-------------------|--------------------------|
-| `DB_HOST`     | `db`              | Nom du service Compose   |
-| `DB_PORT`     | `3306`            | Port interne MySQL       |
-| `DB_USERNAME` | `shopuser`        |                          |
-| `DB_PASSWORD` | `shoppass`        |                          |
-| `DB_DATABASE` | `shop_db`         |                          |
-| `PORT`        | `3000`            | Port d'écoute de l'API   |
+Les valeurs de connexion sont injectées par Compose au moment du démarrage. Créer un fichier `.env` à la racine (voir section suivante) pour le développement local — **ne jamais commiter ce fichier**.
+
+| Variable      | Description                        |
+|---------------|------------------------------------|
+| `DB_HOST`     | Hôte MySQL (`db` dans Compose)     |
+| `DB_PORT`     | Port MySQL                         |
+| `DB_USERNAME` | Utilisateur de la base             |
+| `DB_PASSWORD` | Mot de passe de la base            |
+| `DB_DATABASE` | Nom de la base de données          |
+| `PORT`        | Port d'écoute de l'API             |
 
 ---
 
-## 💻 Développement local (sans Docker)
+## Développement local (sans Docker)
 
 ### Pré-requis
 
-- Node.js ≥ 22
+- Node.js >= 22
 - MySQL accessible (ex. via `docker compose up db`)
 
 ### Installation
@@ -128,12 +130,14 @@ npm install
 
 ### Fichier `.env`
 
+Copier et adapter l'exemple ci-dessous — **ce fichier est dans `.gitignore`, ne pas le commiter** :
+
 ```env
 DB_HOST=localhost
-DB_PORT=3307
-DB_USERNAME=shopuser
-DB_PASSWORD=shoppass
-DB_DATABASE=shop_db
+DB_PORT=<port>
+DB_USERNAME=<utilisateur>
+DB_PASSWORD=<mot_de_passe>
+DB_DATABASE=<nom_base>
 PORT=3000
 ```
 
@@ -145,46 +149,46 @@ npm run start:dev
 
 ---
 
-## 📡 Endpoints API
+## Endpoints API
 
 ### Catégories `/categories`
 
-| Méthode | Route            | Description              |
-|---------|------------------|--------------------------|
-| `GET`   | `/categories`    | Liste toutes les catégories |
-| `GET`   | `/categories/:id`| Détail d'une catégorie   |
-| `POST`  | `/categories`    | Créer une catégorie      |
-| `PATCH` | `/categories/:id`| Modifier une catégorie   |
-| `DELETE`| `/categories/:id`| Supprimer une catégorie  |
+| Méthode  | Route             | Description                 |
+|----------|-------------------|-----------------------------|
+| `GET`    | `/categories`     | Liste toutes les catégories |
+| `GET`    | `/categories/:id` | Détail d'une catégorie      |
+| `POST`   | `/categories`     | Créer une catégorie         |
+| `PATCH`  | `/categories/:id` | Modifier une catégorie      |
+| `DELETE` | `/categories/:id` | Supprimer une catégorie     |
 
 ### Produits `/products`
 
-| Méthode | Route           | Description           |
-|---------|-----------------|-----------------------|
-| `GET`   | `/products`     | Liste tous les produits |
-| `GET`   | `/products/:id` | Détail d'un produit   |
-| `POST`  | `/products`     | Créer un produit      |
-| `PATCH` | `/products/:id` | Modifier un produit   |
-| `DELETE`| `/products/:id` | Supprimer un produit  |
+| Méthode  | Route            | Description              |
+|----------|------------------|--------------------------|
+| `GET`    | `/products`      | Liste tous les produits  |
+| `GET`    | `/products/:id`  | Détail d'un produit      |
+| `POST`   | `/products`      | Créer un produit         |
+| `PATCH`  | `/products/:id`  | Modifier un produit      |
+| `DELETE` | `/products/:id`  | Supprimer un produit     |
 
 ### Clients `/clients`
 
-| Méthode | Route          | Description         |
-|---------|----------------|---------------------|
-| `GET`   | `/clients`     | Liste tous les clients |
-| `GET`   | `/clients/:id` | Détail d'un client  |
-| `POST`  | `/clients`     | Créer un client     |
-| `PATCH` | `/clients/:id` | Modifier un client  |
-| `DELETE`| `/clients/:id` | Supprimer un client |
+| Méthode  | Route           | Description              |
+|----------|-----------------|--------------------------|
+| `GET`    | `/clients`      | Liste tous les clients   |
+| `GET`    | `/clients/:id`  | Détail d'un client       |
+| `POST`   | `/clients`      | Créer un client          |
+| `PATCH`  | `/clients/:id`  | Modifier un client       |
+| `DELETE` | `/clients/:id`  | Supprimer un client      |
 
 ### Commandes `/orders`
 
-| Méthode | Route         | Description               |
-|---------|---------------|---------------------------|
-| `GET`   | `/orders`     | Liste toutes les commandes |
-| `GET`   | `/orders/:id` | Détail d'une commande     |
-| `POST`  | `/orders`     | Créer une commande        |
-| `DELETE`| `/orders/:id` | Supprimer une commande    |
+| Méthode  | Route          | Description                  |
+|----------|----------------|------------------------------|
+| `GET`    | `/orders`      | Liste toutes les commandes   |
+| `GET`    | `/orders/:id`  | Détail d'une commande        |
+| `POST`   | `/orders`      | Créer une commande           |
+| `DELETE` | `/orders/:id`  | Supprimer une commande       |
 
 **Exemple de création de commande :**
 
@@ -201,7 +205,7 @@ POST /orders
 
 ---
 
-## 📖 Documentation Swagger
+## Documentation Swagger
 
 Une fois l'API démarrée, ouvrir :
 
@@ -213,7 +217,7 @@ Tous les endpoints sont documentés et testables directement depuis l'interface.
 
 ---
 
-## 🧪 Tests
+## Tests
 
 ```bash
 # Tests unitaires (run unique)
@@ -228,16 +232,16 @@ npm run test:e2e
 
 ---
 
-## 🏗️ Architecture NestJS
+## Architecture NestJS
 
 Le projet suit l'architecture modulaire de NestJS : chaque ressource vit dans son propre module isolé qui regroupe son contrôleur, son service et ses entités.
 
 ```
 AppModule
 ├── CategoriesModule  (categories.controller → categories.service)
-├── ProductsModule    (products.controller  → products.service)
-├── ClientsModule     (clients.controller   → clients.service)
-└── OrdersModule      (orders.controller    → orders.service)
+├── ProductsModule    (products.controller   → products.service)
+├── ClientsModule     (clients.controller    → clients.service)
+└── OrdersModule      (orders.controller     → orders.service)
 ```
 
 ### Modules et injection de dépendances
@@ -251,17 +255,17 @@ Chaque module déclare ses propres providers et importe uniquement ce dont il a 
 
 Un `ValidationPipe` global est appliqué dans `main.ts` avec trois options :
 
-| Option                | Effet                                                      |
-|-----------------------|------------------------------------------------------------|
-| `whitelist: true`     | Supprime automatiquement les champs non déclarés dans le DTO |
-| `forbidNonWhitelisted`| Renvoie une erreur 400 si un champ inconnu est présent     |
-| `transform: true`     | Convertit les payloads JSON vers les types TypeScript du DTO |
+| Option                 | Effet                                                        |
+|------------------------|--------------------------------------------------------------|
+| `whitelist: true`      | Supprime automatiquement les champs non déclarés dans le DTO |
+| `forbidNonWhitelisted` | Renvoie une erreur 400 si un champ inconnu est présent       |
+| `transform: true`      | Convertit les payloads JSON vers les types TypeScript du DTO |
 
-Les DTOs utilisent les décorateurs `class-validator` (`@IsInt`, `@Min`, `@IsArray`, `@ValidateNested`…) et `@ApiProperty` de Swagger pour la documentation automatique.
+Les DTOs utilisent les décorateurs `class-validator` (`@IsInt`, `@Min`, `@IsArray`, `@ValidateNested`...) et `@ApiProperty` de Swagger pour la documentation automatique.
 
 ---
 
-## 🗄️ TypeORM — Entités & relations
+## TypeORM — Entités & relations
 
 ### Mapping objet-relationnel
 
@@ -276,12 +280,12 @@ category: Relation<Category>;
 
 ### Stratégie `onDelete`
 
-| Relation                        | Comportement                                              |
-|---------------------------------|-----------------------------------------------------------|
-| `Product` → `Category`          | `RESTRICT` — impossible de supprimer une catégorie utilisée |
-| `OrderItem` → `CustomerOrder`   | `CASCADE` — les items sont supprimés avec la commande    |
-| `OrderItem` → `Product`         | `RESTRICT` — impossible de supprimer un produit commandé |
-| `CustomerOrder` → `Client`      | `RESTRICT` — impossible de supprimer un client avec commandes |
+| Relation                      | Comportement                                                 |
+|-------------------------------|--------------------------------------------------------------|
+| `Product` → `Category`        | `RESTRICT` — impossible de supprimer une catégorie utilisée  |
+| `OrderItem` → `CustomerOrder` | `CASCADE` — les items sont supprimés avec la commande        |
+| `OrderItem` → `Product`       | `RESTRICT` — impossible de supprimer un produit commandé     |
+| `CustomerOrder` → `Client`    | `RESTRICT` — impossible de supprimer un client avec commandes|
 
 ### Transaction dans `OrdersService`
 
@@ -298,17 +302,17 @@ Si une étape échoue, toute la transaction est annulée (rollback automatique).
 
 ---
 
-## 🛠️ Stack technique
+## Stack technique
 
-| Outil              | Version   | Rôle                              |
-|--------------------|-----------|-----------------------------------|
-| NestJS             | ^12       | Framework Node.js                 |
-| TypeORM            | ^1.1      | ORM                               |
-| MySQL              | 8.4       | Base de données                   |
-| `@nestjs/swagger`  | ^12       | Documentation OpenAPI             |
-| `class-validator`  | ^0.15     | Validation des DTOs               |
-| Docker / Compose   | ≥ 24      | Conteneurisation                  |
-| Vitest             | ^4        | Tests unitaires & e2e             |
-| oxlint             | ^1        | Linting TypeScript                |
-| Prettier           | ^3        | Formatage du code                 |
-| Node.js            | 22-alpine | Runtime                           |
+| Outil             | Version    | Rôle                          |
+|-------------------|------------|-------------------------------|
+| NestJS            | ^12        | Framework Node.js             |
+| TypeORM           | ^1.1       | ORM                           |
+| MySQL             | 8.4        | Base de données               |
+| `@nestjs/swagger` | ^12        | Documentation OpenAPI         |
+| `class-validator` | ^0.15      | Validation des DTOs           |
+| Docker / Compose  | >= 24      | Conteneurisation              |
+| Vitest            | ^4         | Tests unitaires & e2e         |
+| oxlint            | ^1         | Linting TypeScript            |
+| Prettier          | ^3         | Formatage du code             |
+| Node.js           | 22-alpine  | Runtime                       |
