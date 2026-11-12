@@ -1,124 +1,314 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🛒 Shop API — TP NestJS
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST d'une boutique en ligne, construite avec **NestJS**, **TypeORM** et **MySQL**, entièrement conteneurisée avec **Docker**.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## ✨ Fonctionnalités
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- CRUD complet sur **4 ressources** : Catégories, Produits, Clients, Commandes
+- Calcul automatique du **total** d'une commande à la création
+- Validation des données d'entrée via `class-validator` (pipes globaux)
+- Documentation interactive **Swagger UI** disponible sur `/api`
+- Configuration par variables d'environnement (`@nestjs/config`)
+- Stack **Docker** prête à l'emploi (multi-stage build + healthcheck MySQL)
 
-## Project setup
+---
 
-```bash
-$ npm install
+## 🗂️ Structure du projet
+
+```
+src/
+├── categories/     # Catégories de produits
+├── products/       # Produits (liés à une catégorie)
+├── clients/        # Clients
+└── orders/         # Commandes + lignes de commande (OrderItem)
 ```
 
-## Compile and run the project
+### Modèle de données
 
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```
+Category ──< Product ──< OrderItem >── CustomerOrder >── Client
 ```
 
-## Run tests
+| Entité          | Table              | Relations                              |
+|-----------------|--------------------|----------------------------------------|
+| `Category`      | `categories`       | 1 → N `Product`                        |
+| `Product`       | `products`         | N → 1 `Category`, 1 → N `OrderItem`   |
+| `Client`        | `clients`          | 1 → N `CustomerOrder`                  |
+| `CustomerOrder` | `customer_orders`  | N → 1 `Client`, 1 → N `OrderItem`     |
+| `OrderItem`     | `order_items`      | N → 1 `CustomerOrder`, N → 1 `Product`|
+
+---
+
+## 🚀 Démarrage rapide avec Docker
+
+### Pré-requis
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop) ≥ 24
+
+### Lancer la stack complète
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+docker compose up --build
 ```
 
-## Deployment
+Compose démarre deux services :
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+| Service | Image            | Port exposé  | Rôle                  |
+|---------|------------------|--------------|-----------------------|
+| `db`    | `mysql:8.4`      | `3307 → 3306`| Base de données MySQL |
+| `api`   | build local      | `3000 → 3000`| API NestJS            |
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+> L'API attend que MySQL soit **healthy** avant de démarrer (healthcheck toutes les 10 s, 10 tentatives max).
+
+### Arrêter et nettoyer
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Arrêter sans supprimer les données
+docker compose down
+
+# Arrêter ET supprimer le volume MySQL (reset complet)
+docker compose down -v
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Observability
+## 🐳 Détails Docker
 
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
+### Dockerfile — multi-stage build
 
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
+```
+Stage 1 (builder) : node:22-alpine
+  → npm ci + npm run build  →  dist/
 
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
+Stage 2 (runtime) : node:22-alpine
+  → npm ci --omit=dev  (dépendances prod uniquement)
+  → COPY dist/
+  → EXPOSE 3000
+  → CMD node dist/main.js
+```
 
-To add it to this project:
+L'image finale ne contient **aucun outil de build**, ce qui réduit sa taille et sa surface d'attaque.
+
+### Volume persistant
+
+```yaml
+volumes:
+  mysql_data:   # monté sur /var/lib/mysql du conteneur db
+```
+
+Les données MySQL survivent aux redémarrages et aux `docker compose down`. Seul `docker compose down -v` les supprime.
+
+### Variables d'environnement injectées par Compose
+
+| Variable      | Valeur (compose)  | Description              |
+|---------------|-------------------|--------------------------|
+| `DB_HOST`     | `db`              | Nom du service Compose   |
+| `DB_PORT`     | `3306`            | Port interne MySQL       |
+| `DB_USERNAME` | `shopuser`        |                          |
+| `DB_PASSWORD` | `shoppass`        |                          |
+| `DB_DATABASE` | `shop_db`         |                          |
+| `PORT`        | `3000`            | Port d'écoute de l'API   |
+
+---
+
+## 💻 Développement local (sans Docker)
+
+### Pré-requis
+
+- Node.js ≥ 22
+- MySQL accessible (ex. via `docker compose up db`)
+
+### Installation
 
 ```bash
-$ npm install @nestjs/observe
+npm install
 ```
 
-Then follow the [setup guide](https://docs.nestjs.com/observability/overview) - it takes a single import and an app key.
+### Fichier `.env`
 
-The free plan needs no payment details and covers 300,000 events a month. You can also browse the [live demo](https://www.observe-demo.nestjs.com/dashboard) first - the whole dashboard over a busy service's data, with nothing to install.
+```env
+DB_HOST=localhost
+DB_PORT=3307
+DB_USERNAME=shopuser
+DB_PASSWORD=shoppass
+DB_DATABASE=shop_db
+PORT=3000
+```
 
-## Resources
+### Démarrer en mode watch
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+npm run start:dev
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observe](https://observe.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+---
 
-## Support
+## 📡 Endpoints API
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Catégories `/categories`
 
-## Stay in touch
+| Méthode | Route            | Description              |
+|---------|------------------|--------------------------|
+| `GET`   | `/categories`    | Liste toutes les catégories |
+| `GET`   | `/categories/:id`| Détail d'une catégorie   |
+| `POST`  | `/categories`    | Créer une catégorie      |
+| `PATCH` | `/categories/:id`| Modifier une catégorie   |
+| `DELETE`| `/categories/:id`| Supprimer une catégorie  |
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Produits `/products`
 
-## License
+| Méthode | Route           | Description           |
+|---------|-----------------|-----------------------|
+| `GET`   | `/products`     | Liste tous les produits |
+| `GET`   | `/products/:id` | Détail d'un produit   |
+| `POST`  | `/products`     | Créer un produit      |
+| `PATCH` | `/products/:id` | Modifier un produit   |
+| `DELETE`| `/products/:id` | Supprimer un produit  |
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### Clients `/clients`
+
+| Méthode | Route          | Description         |
+|---------|----------------|---------------------|
+| `GET`   | `/clients`     | Liste tous les clients |
+| `GET`   | `/clients/:id` | Détail d'un client  |
+| `POST`  | `/clients`     | Créer un client     |
+| `PATCH` | `/clients/:id` | Modifier un client  |
+| `DELETE`| `/clients/:id` | Supprimer un client |
+
+### Commandes `/orders`
+
+| Méthode | Route         | Description               |
+|---------|---------------|---------------------------|
+| `GET`   | `/orders`     | Liste toutes les commandes |
+| `GET`   | `/orders/:id` | Détail d'une commande     |
+| `POST`  | `/orders`     | Créer une commande        |
+| `DELETE`| `/orders/:id` | Supprimer une commande    |
+
+**Exemple de création de commande :**
+
+```json
+POST /orders
+{
+  "clientId": 1,
+  "items": [
+    { "productId": 2, "quantity": 3 },
+    { "productId": 5, "quantity": 1 }
+  ]
+}
+```
+
+---
+
+## 📖 Documentation Swagger
+
+Une fois l'API démarrée, ouvrir :
+
+```
+http://localhost:3000/api
+```
+
+Tous les endpoints sont documentés et testables directement depuis l'interface.
+
+---
+
+## 🧪 Tests
+
+```bash
+# Tests unitaires (run unique)
+npm run test
+
+# Tests unitaires avec couverture
+npm run test:cov
+
+# Tests e2e
+npm run test:e2e
+```
+
+---
+
+## 🏗️ Architecture NestJS
+
+Le projet suit l'architecture modulaire de NestJS : chaque ressource vit dans son propre module isolé qui regroupe son contrôleur, son service et ses entités.
+
+```
+AppModule
+├── CategoriesModule  (categories.controller → categories.service)
+├── ProductsModule    (products.controller  → products.service)
+├── ClientsModule     (clients.controller   → clients.service)
+└── OrdersModule      (orders.controller    → orders.service)
+```
+
+### Modules et injection de dépendances
+
+Chaque module déclare ses propres providers et importe uniquement ce dont il a besoin via `TypeOrmModule.forFeature([...])`. L'`AppModule` orchestre la configuration globale :
+
+- **`ConfigModule.forRoot({ isGlobal: true })`** — rend les variables d'environnement accessibles partout sans ré-import
+- **`TypeOrmModule.forRootAsync`** — initialise la connexion MySQL de façon asynchrone en injectant `ConfigService`, ce qui garantit que les variables d'env sont disponibles avant la connexion
+
+### Validation globale (Pipes)
+
+Un `ValidationPipe` global est appliqué dans `main.ts` avec trois options :
+
+| Option                | Effet                                                      |
+|-----------------------|------------------------------------------------------------|
+| `whitelist: true`     | Supprime automatiquement les champs non déclarés dans le DTO |
+| `forbidNonWhitelisted`| Renvoie une erreur 400 si un champ inconnu est présent     |
+| `transform: true`     | Convertit les payloads JSON vers les types TypeScript du DTO |
+
+Les DTOs utilisent les décorateurs `class-validator` (`@IsInt`, `@Min`, `@IsArray`, `@ValidateNested`…) et `@ApiProperty` de Swagger pour la documentation automatique.
+
+---
+
+## 🗄️ TypeORM — Entités & relations
+
+### Mapping objet-relationnel
+
+Les entités sont des classes TypeScript décorées, TypeORM se charge de créer et synchroniser les tables (`synchronize: true` en mode TP).
+
+```typescript
+// Exemple : un produit appartient à une catégorie (N → 1)
+@ManyToOne(() => Category, (c) => c.products, { onDelete: 'RESTRICT' })
+@JoinColumn({ name: 'categoryId' })
+category: Relation<Category>;
+```
+
+### Stratégie `onDelete`
+
+| Relation                        | Comportement                                              |
+|---------------------------------|-----------------------------------------------------------|
+| `Product` → `Category`          | `RESTRICT` — impossible de supprimer une catégorie utilisée |
+| `OrderItem` → `CustomerOrder`   | `CASCADE` — les items sont supprimés avec la commande    |
+| `OrderItem` → `Product`         | `RESTRICT` — impossible de supprimer un produit commandé |
+| `CustomerOrder` → `Client`      | `RESTRICT` — impossible de supprimer un client avec commandes |
+
+### Transaction dans `OrdersService`
+
+La création d'une commande est entièrement atomique via `DataSource.transaction()` :
+
+1. Vérifie l'existence du client
+2. Détecte les doublons de produits dans la liste
+3. Pour chaque produit (trié par id pour éviter les deadlocks), décrémente le stock avec un `UPDATE ... WHERE stock >= qty` — si `affected = 0`, erreur 400 (stock insuffisant)
+4. Calcule le total en centimes pour éviter les erreurs d'arrondi flottant
+5. Sauvegarde la commande puis ses `OrderItem` avec le `unitPrice` snapshotté au moment de l'achat
+6. Retourne la commande complète avec ses relations chargées
+
+Si une étape échoue, toute la transaction est annulée (rollback automatique).
+
+---
+
+## 🛠️ Stack technique
+
+| Outil              | Version   | Rôle                              |
+|--------------------|-----------|-----------------------------------|
+| NestJS             | ^12       | Framework Node.js                 |
+| TypeORM            | ^1.1      | ORM                               |
+| MySQL              | 8.4       | Base de données                   |
+| `@nestjs/swagger`  | ^12       | Documentation OpenAPI             |
+| `class-validator`  | ^0.15     | Validation des DTOs               |
+| Docker / Compose   | ≥ 24      | Conteneurisation                  |
+| Vitest             | ^4        | Tests unitaires & e2e             |
+| oxlint             | ^1        | Linting TypeScript                |
+| Prettier           | ^3        | Formatage du code                 |
+| Node.js            | 22-alpine | Runtime                           |
